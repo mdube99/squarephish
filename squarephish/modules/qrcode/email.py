@@ -19,7 +19,8 @@ from configparser import ConfigParser
 from email.message import EmailMessage
 from email.mime.image import MIMEImage
 from squarephish.modules.emailer import Emailer
-
+from squarephish.modules.server.encrypt import encrypt_aes
+from squarephish.modules.server.config import SECRET_KEY
 
 class QRCodeEmail:
     """Class to handle initial QR code emails"""
@@ -31,7 +32,7 @@ class QRCodeEmail:
         endpoint: str,
         email: str,
         url: str,
-    ) -> bytes:
+    ) -> bytes | None:
         """Generate a QR code for a given URL
 
         :param server:   malicious server domain/IP
@@ -44,7 +45,8 @@ class QRCodeEmail:
         try:
             endpoint = endpoint.strip("/")
             if url is None:
-                url = f"https://{server}:{port}/{endpoint}?email={email}"
+                encrypted_email = encrypt_aes(email, SECRET_KEY)
+                url = f"https://{server}:{port}/{endpoint}?client_id={encrypted_email}"
             qrcode = pyqrcode.create(url)
 
             # Get the QR code as raw bytes and store as BytesIO object
